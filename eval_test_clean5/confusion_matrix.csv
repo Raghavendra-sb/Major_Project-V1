@@ -1,0 +1,9 @@
+true \ predicted,Acne,Actinic_Keratosis,Benign_tumors,Eczema,Lupus,SkinCancer,Vasculitis,Warts
+Acne,27,1,7,2,0,2,6,0
+Actinic_Keratosis,10,96,13,5,4,10,0,4
+Benign_tumors,2,0,81,7,0,10,4,1
+Eczema,0,0,13,65,1,2,7,2
+Lupus,2,4,6,3,9,3,1,0
+SkinCancer,1,0,23,5,0,31,3,2
+Vasculitis,0,0,5,9,0,1,26,3
+Warts,3,0,10,7,1,2,0,28

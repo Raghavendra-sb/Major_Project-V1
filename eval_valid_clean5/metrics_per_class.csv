@@ -1,0 +1,9 @@
+class,precision,recall,f1,support
+Acne,0.5667,0.7158,0.6326,95
+Actinic_Keratosis,0.734,0.7782,0.7555,266
+Benign_tumors,0.6042,0.8424,0.7037,203
+Eczema,0.7723,0.8254,0.798,189
+Lupus,0.6613,0.5616,0.6074,73
+SkinCancer,0.4286,0.1667,0.24,144
+Vasculitis,0.65,0.527,0.5821,74
+Warts,0.7955,0.5385,0.6422,65

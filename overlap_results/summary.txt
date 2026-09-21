@@ -1,0 +1,22 @@
+
+================================================================
+NEAR-DUPLICATE CHECK  |  threshold 5/64  |  classes: our8
+================================================================
+Split sizes: test=692, train=5243, valid=1284
+
+How many images have a near-duplicate in ANOTHER split (this inflates test scores):
+  valid -> train:   175 of 1284 images (13.6%) have a match; 63 of those in the same class
+   test -> train:   122 of 692 images (17.6%) have a match; 61 of those in the same class
+   test -> valid:    64 of 692 images (9.2%) have a match; 29 of those in the same class
+
+How many images have a near-duplicate INSIDE their own split (copies / augmented variants):
+   test:    58 of 692 images (8.4%)
+  train:   911 of 5243 images (17.4%)
+  valid:   162 of 1284 images (12.6%)
+
+How to read this:
+  - Across splits ~0-1%   : results are trustworthy on this point.
+  - Across splits >5%     : the model has probably seen these pictures; scores are inflated.
+  - Inside a split high % : the split holds many copies of the same photo, so it has fewer
+                            independent images than files; report the smaller number.
+  - Rotated / zoomed / cropped copies are NOT detected, so a clean result is not a proof.

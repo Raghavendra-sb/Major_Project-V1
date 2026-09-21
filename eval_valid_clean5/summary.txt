@@ -1,0 +1,95 @@
+Cleaned set: excluded 175 of 1284 images that have a near-duplicate in the training split (hash distance <= 5); 1109 images remain.
+
+================================================================
+EVALUATION  |  1109 images  |  C:\Users\raghu\datasets\skin\SkinDisease\valid
+================================================================
+Reminder: these numbers are only meaningful if the test images were NOT used in training.
+
+Class                Precision   Recall      F1  Support
+Acne                     56.7%    71.6%   63.3%       95
+Actinic_Keratosis        73.4%    77.8%   75.5%      266
+Benign_tumors            60.4%    84.2%   70.4%      203
+Eczema                   77.2%    82.5%   79.8%      189
+Lupus                    66.1%    56.2%   60.7%       73
+SkinCancer               42.9%    16.7%   24.0%      144
+Vasculitis               65.0%    52.7%   58.2%       74
+Warts                    79.5%    53.8%   64.2%       65
+
+Overall
+  Accuracy            :  66.8%
+  Balanced accuracy   :  61.9%   (mean recall; fairer if classes are imbalanced)
+  Macro F1            :  62.0%
+  Weighted F1         :  64.8%
+  Top-3 accuracy      :  89.4%   (true class is among the 3 shown on the result page)
+
+  >> SkinCancer recall (most important safety number):  16.7%  (24 of 144 found)
+
+Confidence
+  Mean confidence when CORRECT :  68.1%
+  Mean confidence when WRONG   :  48.2%   (if this is also high, the model is over-confident)
+  Calibration error (ECE)      : 0.069   (0 = perfectly calibrated; lower is better)
+  bin          images  avg conf  accuracy
+  0.1-0.2           2     18.9%      0.0%
+  0.2-0.3          50     26.9%     26.0%
+  0.3-0.4         142     35.6%     30.3%
+  0.4-0.5         189     44.6%     54.5%
+  0.5-0.6         166     55.3%     65.7%
+  0.6-0.7         149     65.3%     69.8%
+  0.7-0.8         160     75.0%     83.8%
+  0.8-0.9         142     85.0%     92.3%
+  0.9-1.0         109     94.8%     95.4%
+
+  Accuracy if we only trust predictions above a confidence threshold:
+   threshold  coverage  accuracy
+        0.00    100.0%     66.8%
+        0.50     65.5%     80.2%
+        0.55     58.1%     82.5%
+        0.70     37.1%     89.8%
+        0.85     16.1%     93.8%
+        0.95      5.2%    100.0%
+
+================================================================
+SAFETY: does the triage safety net catch serious cases?
+================================================================
+Current settings: RISK_PROB_FLOOR=0.1, CLOSE_MARGIN=0.2, low-conf=0.55
+'Flagged' = urgency Medium or High (before any symptom answers).
+
+True class               n  CNN correct  Flagged M+    High
+Actinic_Keratosis      266        77.8%       99.6%    7.1%
+Lupus                   73        56.2%       98.6%   58.9%
+SkinCancer             144        16.7%       97.9%   24.3%
+Vasculitis              74        52.7%       95.9%   55.4%
+Acne                    95        71.6%       49.5%    5.3%
+Eczema                 189        82.5%       64.0%    7.4%
+Warts                   65        53.8%       76.9%    4.6%
+
+Missed SkinCancer images (120) were predicted as:
+   Actinic_Keratosis      49   (still flagged Medium+ by triage: 49)
+   Benign_tumors          32   (still flagged Medium+ by triage: 32)
+   Acne                   26   (still flagged Medium+ by triage: 23)
+   Lupus                   9   (still flagged Medium+ by triage: 9)
+   Vasculitis              2   (still flagged Medium+ by triage: 2)
+   Eczema                  1   (still flagged Medium+ by triage: 1)
+   Warts                   1   (still flagged Medium+ by triage: 1)
+
+False alarms: low-risk classes flagged Medium+ =  62.5%
+
+RISK_PROB_FLOOR sweep (higher = fewer false alarms, but more serious cases missed)
+  floor   SkinCancer flagged   watch classes flagged   false alarms
+   0.02               100.0%                  100.0%          81.4%
+   0.05                99.3%                   99.6%          73.6%
+   0.10                97.9%                   98.6%          62.5%
+   0.15                96.5%                   97.1%          57.0%
+   0.20                95.1%                   96.4%          50.1%
+   0.30                95.1%                   93.9%          44.4%
+
+CLOSE_MARGIN sweep (top-1 vs top-2 gap that counts as 'unsure')
+ margin   SkinCancer flagged   watch classes flagged   false alarms
+   0.05                97.9%                   98.6%          62.5%
+   0.10                97.9%                   98.6%          62.5%
+   0.20                97.9%                   98.6%          62.5%
+   0.30                97.9%                   98.6%          62.5%
+   0.40                97.9%                   98.7%          63.9%
+
+How to read this: pick the settings where SkinCancer flagged is (close to) 100%
+while false alarms stay at a level you can defend. Then edit them in triage_rules.py.

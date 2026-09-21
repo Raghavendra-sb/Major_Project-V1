@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DermaAI — Analysis Result</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080c14;--bg-card:#0d1424;--bg-panel:#111827;
+  --border:rgba(56,139,221,0.18);--border-bright:rgba(56,139,221,0.5);
+  --accent:#378ADD;--accent2:#1D9E75;
+  --text:#e8edf5;--text-muted:#6b7a96;--text-dim:#3a4560;
+  --danger:#E24B4A;--success:#1D9E75;--warn:#EF9F27;
+}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Segoe UI',system-ui,sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;padding:2rem 1rem 4rem;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(56,138,221,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(56,138,221,0.04) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(circle at 10% 20%,rgba(56,138,221,0.05) 0%,transparent 40%),
+    radial-gradient(circle at 90% 80%,rgba(29,158,117,0.05) 0%,transparent 40%);
+}
+.wrap{width:100%;max-width:700px;position:relative;z-index:1;}
+
+/* ── HEADER ── */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:36px;height:36px;border-radius:8px;background:rgba(55,138,221,0.12);border:1px solid var(--border-bright);display:flex;align-items:center;justify-content:center;}
+.logo-text{font-size:16px;font-weight:700;letter-spacing:0.05em;}
+.logo-text span{color:var(--accent);}
+.badge-done{font-size:11px;padding:3px 10px;border-radius:99px;border:1px solid var(--accent2);color:var(--accent2);letter-spacing:0.06em;font-weight:500;display:flex;align-items:center;gap:5px;}
+.badge-done::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent2);}
+
+/* ── PAGE TITLE ── */
+.page-title{margin-bottom:1.5rem;}
+.page-title h1{font-size:22px;font-weight:700;}
+.page-title h1 span{color:var(--accent);}
+.page-title p{font-size:13px;color:var(--text-muted);margin-top:5px;}
+
+/* ── CARD BASE ── */
+.card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:14px;padding:1.5rem;margin-bottom:1.25rem;
+  position:relative;overflow:hidden;
+}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border-bright),transparent);}
+.card-corner{position:absolute;width:10px;height:10px;border-color:rgba(56,138,221,0.3);border-style:solid;}
+.card-corner.tl{top:6px;left:6px;border-width:1.5px 0 0 1.5px;}
+.card-corner.tr{top:6px;right:6px;border-width:1.5px 1.5px 0 0;}
+.card-corner.bl{bottom:6px;left:6px;border-width:0 0 1.5px 1.5px;}
+.card-corner.br{bottom:6px;right:6px;border-width:0 1.5px 1.5px 0;}
+.section-label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.section-label::before{content:'';display:inline-block;width:3px;height:12px;background:var(--accent);border-radius:2px;}
+
+/* ── RESULT HERO ── */
+.result-hero{display:flex;gap:1.25rem;align-items:flex-start;}
+.result-image-wrap{flex-shrink:0;position:relative;}
+.result-image{
+  width:160px;height:130px;object-fit:cover;
+  border-radius:10px;border:1px solid var(--border-bright);display:block;
+}
+.result-image-missing{
+  width:160px;height:130px;border-radius:10px;border:1px dashed var(--border);
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  font-size:11px;color:var(--text-muted);padding:10px;
+}
+.img-scan{
+  position:absolute;left:0;top:0;width:100%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent2),transparent);
+  animation:scandown 3s linear infinite;opacity:0.7;
+}
+@keyframes scandown{0%{top:0%}100%{top:100%}}
+.result-info{flex:1;min-width:0;}
+.condition-name{
+  font-size:22px;font-weight:700;color:var(--text);
+  margin:4px 0 10px;line-height:1.2;word-break:break-word;
+}
+.confidence-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.conf-label{font-size:12px;color:var(--text-muted);flex-shrink:0;}
+.conf-track{flex:1;background:rgba(56,138,221,0.1);border-radius:99px;height:7px;overflow:hidden;}
+.conf-fill{height:100%;border-radius:99px;transition:width 1.2s ease;}
+.conf-fill.high{background:var(--success);}
+.conf-fill.mid{background:var(--warn);}
+.conf-fill.low{background:var(--danger);}
+.conf-pct{font-size:13px;font-weight:700;flex-shrink:0;}
+.conf-pct.high{color:var(--success);}
+.conf-pct.mid{color:var(--warn);}
+.conf-pct.low{color:var(--danger);}
+.result-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.rbadge{font-size:11px;padding:4px 10px;border-radius:99px;font-weight:500;}
+.rbadge-confidence{background:rgba(29,158,117,0.1);color:var(--accent2);border:1px solid rgba(29,158,117,0.25);}
+.rbadge-confidence.mid{background:rgba(239,159,39,0.1);color:var(--warn);border-color:rgba(239,159,39,0.25);}
+.rbadge-confidence.low{background:rgba(226,75,74,0.1);color:var(--danger);border-color:rgba(226,75,74,0.25);}
+.rbadge-model{background:rgba(56,138,221,0.1);color:var(--accent);border:1px solid var(--border);}
+
+/* ── TOP PREDICTIONS ── */
+.top-preds{margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border);}
+.top-pred{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted);margin-top:9px;}
+.top-pred-name{width:140px;flex-shrink:0;color:var(--text);}
+.top-pred-track{flex:1;background:rgba(56,138,221,0.1);border-radius:99px;height:6px;overflow:hidden;}
+.top-pred-fill{height:100%;border-radius:99px;background:var(--accent);}
+.top-pred.first .top-pred-fill{background:var(--accent2);}
+.top-pred-pct{width:44px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;}
+
+/* ── WARNING BOX ── */
+.warning-box{
+  background:rgba(239,159,39,0.06);
+  border:1px solid rgba(239,159,39,0.25);
+  border-left:3px solid var(--warn);
+  border-radius:0 8px 8px 0;
+  padding:12px 14px;margin-top:1rem;
+  font-size:13px;color:#c8a04a;line-height:1.6;
+  display:flex;gap:10px;align-items:flex-start;
+}
+
+/* ── URGENCY CARD ── */
+.urgency{border-left:3px solid var(--warn);}
+.urgency.low{border-left-color:var(--success);}
+.urgency.medium{border-left-color:var(--warn);}
+.urgency.high{border-left-color:var(--danger);}
+.urgency-pill{
+  display:inline-block;font-size:11px;font-weight:700;letter-spacing:0.07em;
+  text-transform:uppercase;padding:4px 12px;border-radius:99px;border:1px solid;
+}
+.urgency.low .urgency-pill{color:var(--success);background:rgba(29,158,117,0.1);border-color:rgba(29,158,117,0.3);}
+.urgency.medium .urgency-pill{color:var(--warn);background:rgba(239,159,39,0.1);border-color:rgba(239,159,39,0.3);}
+.urgency.high .urgency-pill{color:var(--danger);background:rgba(226,75,74,0.1);border-color:rgba(226,75,74,0.3);}
+.urgency-message{font-size:14px;line-height:1.65;color:var(--text);margin-top:10px;}
+.urgency-sub{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:16px;}
+.urgency ul{margin:8px 0 0 18px;font-size:13px;line-height:1.7;color:#c8d4e8;}
+
+/* ── AI EXPLANATION ── */
+.ai-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.gemini-badge{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;padding:4px 10px;border-radius:99px;
+  background:rgba(56,138,221,0.08);border:1px solid var(--border);
+  color:var(--text-muted);
+}
+.gemini-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.ai-explanation{
+  font-size:14px;line-height:1.85;color:#c8d4e8;
+  white-space:pre-wrap;word-break:break-word;
+}
+.disclaimer{
+  margin-top:1.25rem;padding:12px 14px;
+  background:rgba(226,75,74,0.05);
+  border:1px solid rgba(226,75,74,0.15);
+  border-left:3px solid rgba(226,75,74,0.4);
+  border-radius:0 8px 8px 0;
+  font-size:12px;color:#9a6060;line-height:1.6;
+  display:flex;gap:10px;align-items:flex-start;
+}
+
+/* ── FOLLOW-UP QUESTIONS ── */
+.followup-intro{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:1.1rem;}
+.q{margin-bottom:1.15rem;}
+.q-text{font-size:14px;color:var(--text);margin-bottom:8px;line-height:1.5;}
+.opt-row{display:flex;flex-wrap:wrap;gap:8px;}
+.opt{position:relative;display:inline-block;}
+.opt input{position:absolute;opacity:0;pointer-events:none;}
+.opt span{
+  display:inline-block;padding:7px 14px;border-radius:99px;
+  border:1px solid var(--border);background:var(--bg-panel);
+  font-size:12.5px;color:var(--text-muted);cursor:pointer;
+  transition:border-color 0.15s,background 0.15s,color 0.15s;
+}
+.opt span:hover{border-color:var(--border-bright);color:var(--text);}
+.opt input:checked + span{border-color:var(--accent);background:rgba(55,138,221,0.18);color:#fff;}
+.opt input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px;}
+.refine-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 22px;border:none;cursor:pointer;
+  background:var(--accent);color:#fff;border-radius:10px;
+  font-size:14px;font-weight:600;letter-spacing:0.03em;font-family:inherit;
+  transition:opacity 0.15s,transform 0.1s;
+}
+.refine-btn:hover{opacity:0.88;}
+.refine-btn:active{transform:scale(0.98);}
+.refine-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* ── META STRIP ── */
+.meta-strip{
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem;
+}
+.meta-item{
+  background:var(--bg-panel);border:1px solid var(--border);
+  border-radius:8px;padding:8px 14px;
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;color:var(--text-muted);
+}
+.meta-item svg{flex-shrink:0;}
+.meta-item.refined{border-color:rgba(29,158,117,0.4);color:var(--accent2);}
+
+/* ── BACK BUTTON ── */
+.back-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 22px;
+  background:var(--accent);color:#fff;
+  text-decoration:none;border-radius:10px;
+  font-size:14px;font-weight:600;letter-spacing:0.03em;
+  transition:opacity 0.15s,transform 0.1s;margin-top:0.5rem;
+}
+.back-btn:hover{opacity:0.88;}
+.back-btn:active{transform:scale(0.98);}
+
+/* ── FOOTER ── */
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;}
+.footer-note{font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:5px;}
+.footer-link{font-size:12px;color:var(--text-muted);text-decoration:none;}
+.footer-link:hover{color:var(--danger);}
+
+/* responsive */
+@media(max-width:520px){
+  .result-hero{flex-direction:column;}
+  .result-image,.result-image-missing{width:100%;height:180px;}
+  .meta-strip{flex-direction:column;}
+  .top-pred-name{width:110px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2" stroke-linecap="round">
+          <path d="M12 2a5 5 0 0 1 5 5c0 5.25-5 11-5 11S7 12.25 7 7a5 5 0 0 1 5-5z"/>
+          <circle cx="12" cy="7" r="2"/>
+        </svg>
+      </div>
+      <span class="logo-text">Derma<span>AI</span></span>
+    </div>
+    <div class="badge-done">ANALYSIS COMPLETE</div>
+  </div>
+
+  <!-- page title -->
+  <div class="page-title">
+    <h1><span>Prediction</span> Result</h1>
+    <p>CNN model classification with urgency check and Gemini RAG explanation</p>
+  </div>
+
+  <!-- meta strip -->
+  <div class="meta-strip">
+    <div class="meta-item">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Processed just now
+    </div>
+    <div class="meta-item">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      CNN v2.4 Model
+    </div>
+    <div class="meta-item">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Gemini + RAG Active
+    </div>
+    {% if refined %}
+    <div class="meta-item refined">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Updated with your answers
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── RESULT CARD ── -->
+  <div class="card" id="resultCard">
+    <div class="card-corner tl"></div><div class="card-corner tr"></div>
+    <div class="card-corner bl"></div><div class="card-corner br"></div>
+
+    <div class="section-label">Detected condition</div>
+
+    <div class="result-hero">
+      <div class="result-image-wrap">
+        {% if image_url %}
+        <img class="result-image" src="{{ image_url }}" alt="Uploaded skin image"/>
+        <div class="img-scan"></div>
+        {% else %}
+        <div class="result-image-missing">Image no longer stored</div>
+        {% endif %}
+      </div>
+
+      <div class="result-info">
+        <div class="condition-name">{{ label.replace('_',' ') }}</div>
+
+        <div class="confidence-row">
+          <span class="conf-label">Confidence</span>
+          <div class="conf-track">
+            <div class="conf-fill {% if score >= 0.90 %}high{% elif score >= 0.55 %}mid{% else %}low{% endif %}"
+                 id="confBar" style="width:0%;"></div>
+          </div>
+          <span class="conf-pct {% if score >= 0.90 %}high{% elif score >= 0.55 %}mid{% else %}low{% endif %}">
+            {{ "%.1f"|format(score * 100) }}%
+          </span>
+        </div>
+
+        <div class="result-badges">
+          <span class="rbadge rbadge-confidence {% if score >= 0.90 %}{% elif score >= 0.55 %}mid{% else %}low{% endif %}">
+            {% if score >= 0.90 %}High confidence
+            {% elif score >= 0.55 %}Moderate confidence
+            {% else %}Low confidence{% endif %}
+          </span>
+          <span class="rbadge rbadge-model">CNN Classifier</span>
+          <span class="rbadge rbadge-model">Gemini RAG</span>
+        </div>
+      </div>
+    </div>
+
+    {% if top_predictions and top_predictions|length > 1 %}
+    <div class="top-preds">
+      <div class="section-label" style="margin-bottom:0;">Top predictions</div>
+      {% for p in top_predictions %}
+      <div class="top-pred{% if loop.first %} first{% endif %}">
+        <span class="top-pred-name">{{ p.label.replace('_',' ') }}</span>
+        <div class="top-pred-track">
+          <div class="top-pred-fill" style="width:{{ '%.1f'|format(p.probability * 100) }}%;"></div>
+        </div>
+        <span class="top-pred-pct">{{ '%.1f'|format(p.probability * 100) }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if warning == "low_confidence" %}
+    <div class="warning-box">
+      <svg style="flex-shrink:0;margin-top:2px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF9F27" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div>
+        <strong style="color:#d4a04a;display:block;margin-bottom:3px;">Low confidence detection</strong>
+        The model is uncertain about this result. Please upload a clearer, well-lit image of the affected area for a more accurate analysis.
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── URGENCY CARD ── -->
+  {% if triage %}
+  <div class="card urgency {{ triage.level }}">
+    <div class="card-corner tl"></div><div class="card-corner tr"></div>
+    <div class="card-corner bl"></div><div class="card-corner br"></div>
+
+    <div class="section-label">Urgency check</div>
+    <span class="urgency-pill">{{ triage.title }}</span>
+    <p class="urgency-message">{{ triage.message }}</p>
+
+    {% if triage.reasons %}
+    <div class="urgency-sub">Why this level</div>
+    <ul>
+      {% for r in triage.reasons %}<li>{{ r }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if triage.watch_for %}
+    <div class="urgency-sub">{{ triage.watch_for_title }}</div>
+    <ul>
+      {% for item in triage.watch_for %}<li>{{ item }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- ── AI EXPLANATION CARD ── -->
+  <div class="card">
+    <div class="card-corner tl"></div><div class="card-corner tr"></div>
+    <div class="card-corner bl"></div><div class="card-corner br"></div>
+
+    <div class="ai-header">
+      <div class="section-label" style="margin-bottom:0;">AI-generated explanation</div>
+      <div class="gemini-badge" title="{{ model_used or 'fallback text (AI unavailable)' }}">
+        <div class="gemini-dot"></div>
+        Gemini + RAG
+      </div>
+    </div>
+
+    <div class="ai-explanation">{{ llm_explanation }}</div>
+
+    <div class="disclaimer">
+      <svg style="flex-shrink:0;margin-top:2px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c0706e" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>This explanation is AI-generated using a medical knowledge base and is for <strong style="color:#c0706e;">informational purposes only</strong>. It does not replace professional medical advice. Please consult a qualified dermatologist for proper diagnosis and treatment.</span>
+    </div>
+  </div>
+
+  <!-- ── FOLLOW-UP QUESTIONS CARD ── -->
+  {% if questions %}
+  <div class="card followup">
+    <div class="card-corner tl"></div><div class="card-corner tr"></div>
+    <div class="card-corner bl"></div><div class="card-corner br"></div>
+
+    <div class="section-label">{% if refined %}Your answers{% else %}Refine this result{% endif %}</div>
+    <p class="followup-intro">
+      {% if refined %}
+      This result was updated using your answers. You can change them and update again.
+      {% else %}
+      Answer a few quick questions so the urgency check and explanation fit your situation better. All optional.
+      {% endif %}
+    </p>
+
+    <form id="refineForm" method="POST" action="{{ url_for('refine') }}">
+      {% for q in questions %}
+      <div class="q">
+        <div class="q-text">{{ loop.index }}. {{ q.text }}</div>
+        <div class="opt-row">
+          {% for opt in q.options %}
+          <label class="opt">
+            <input type="radio" name="{{ q.id }}" value="{{ opt.value }}" {% if answers.get(q.id) == opt.value %}checked{% endif %}>
+            <span>{{ opt.label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+      <button type="submit" id="refineBtn" class="refine-btn" {% if not answers %}disabled{% endif %}>
+        {% if refined %}Update again{% else %}Update result{% endif %}
+      </button>
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- back button + footer -->
+  <a href="{{ url_for('index') }}" class="back-btn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Analyse Another Image
+  </a>
+
+  <div class="footer">
+    <div class="footer-note">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Your image is removed from the server when you go home or sign out
+    </div>
+    <a href="/logout" class="footer-link">Sign out</a>
+  </div>
+
+</div>
+
+<script>
+/* animate confidence bar on load */
+window.addEventListener('load',function(){
+  const bar=document.getElementById('confBar');
+  if(bar){
+    setTimeout(()=>{
+      bar.style.width='{{ "%.1f"|format(score * 100) }}%';
+    },300);
+  }
+});
+
+/* follow-up form: enable the button once something is selected, show progress on submit */
+(function(){
+  const form=document.getElementById('refineForm');
+  if(!form) return;
+  const btn=document.getElementById('refineBtn');
+  form.addEventListener('change',function(){ btn.disabled=false; });
+  form.addEventListener('submit',function(){
+    btn.disabled=true;
+    btn.textContent='Updating… this can take a few seconds';
+  });
+})();
+</script>
+</body>
+</html>
